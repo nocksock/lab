@@ -16,37 +16,48 @@
       <button type="submit">Submit</button>
     </form>
 
-    <ul id="results"></ul>
+    <div id="results"></div>
 
     <script type="module">
       import { PGlite } from 'https://cdn.jsdelivr.net/npm/@electric-sql/pglite/dist/index.js'
       import { live } from 'https://cdn.jsdelivr.net/npm/@electric-sql/pglite/dist/live/index.js'
-      const db = new PGlite({
-        dataDir: 'idb://pglite-test',
-        extensions: {live}
-      })
+      import { signal, effect, computed } from 'https://esm.sh/kloen'
+      import { html, render } from 'https://esm.sh/lit-html'
 
-      await db.sql`CREATE TABLE IF NOT EXISTS test (name TEXT)`
+      const { query, db } = await createDb('idb://pglite-test')
 
-      const {refresh, subscribe, unsubscribe} = await db.live.query(`SELECT * FROM test`, [], (res) => {
-        render(res.rows)
-      })
-
-      document.querySelector('form').addEventListener('submit', async (e) => {
+      document.querySelector('form').addEventListener('submit', async e => {
         e.preventDefault()
         const name = new FormData(e.target).get('name')
         await db.sql`INSERT INTO test (name) VALUES (${name})`
         e.target.reset()
       })
 
-      function render(rows) {
-        const results = document.querySelector('#results')
-        results.innerHTML = ''
-        rows.forEach(({name}) => {
-          const li = document.createElement('li')
-          li.textContent = name
-          results.appendChild(li)
-        })
+
+      const $entries = query(`SELECT * FROM test`)
+      const template = () => html`
+        <ul>
+          ${$entries().map(({ name }) => html`<li>${name}</li>`)}
+        </ul>
+      `
+
+      effect(() => render(template(), document.querySelector('#results')))
+
+      /** - utils - **/
+      function liveQuery(db, sql, params) {
+        const $rows = signal([])
+        db.live.query(sql, params, res => $rows(res.rows))
+        return computed(() => $rows()) // read only
+      }
+
+      function bind(db, fn) {
+        return fn.bind(null, db)
+      }
+
+      async function createDb(dataDir) {
+        const db = new PGlite({ dataDir, extensions: { live } })
+        await db.sql`CREATE TABLE IF NOT EXISTS test (name TEXT)`
+        return { query: bind(db, liveQuery), db }
       }
     </script>
   </body>
