@@ -17,14 +17,30 @@ edit $ROOT='':
     ROOT=$(just pick)
   fi
 
-  kitten @ launch --type=tab --cwd=$(realpath $ROOT) --title=$ROOT --keep-focus web-dev-server --node-resolve --watch --esbuild-target auto --app-index $ROOT
+  pid=$(kitten @ launch \
+      --type=tab \
+      --cwd=$(realpath $ROOT) \
+      --title=$ROOT \
+      --keep-focus \
+        web-dev-server --app-index $ROOT)
   cd $ROOT
+  echo pid: $pid
+
+  # Grabbing host from output of last command
+  # ...
+  #     Local:    http://localhost:8000/
+  # ...
+  while [ -z "$host" ]; do
+    host=$(kitten @ get-text --match "id:$pid" --extent last_cmd_output | rg '\s*Local:\s+(http://.*)$' -r '$1')
+    sleep 0.1 # wait for the server to have started
+  done
+
   if [ -f index.html ]; then
-    $(sleep 0.5 ; open http://localhost:8000/index.html) &
-    nvim index.html
-  else
-    nvim
+    suffix="index.html"
   fi
+
+  open "${host}${suffix}" --background
+  nvim ${suffix:-''}
 
 fork $FOLDER='':
   #!/usr/bin/env bash
