@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ease-in-out vs sin(t*pi)</title>
+    <link rel="stylesheet" href="./base.css">
+
+    <style>
+    </style>
+  </head>
+  <body>
+    <h1>osc with css functions</h1>
+    <article>
+      <figure>
+        <style>
+          @function --osc-sin(--t) {
+            result: calc(cos(var(--t) * pi));
+          }
+
+          @function --env-dahd(--delay: 0, --attack: 0, --hold: 0, --decay: 1, --animation) {
+            --total        : calc(var(--delay) + var(--attack) + var(--hold) + var(--decay));
+            --delay-start  : calc(var(--delay) / var(--total) * 100%);
+            --attack-start : calc((var(--delay) + var(--attack)) / var(--total) * 100%);
+            --hold-start   : calc((var(--attack) + var(--hold)) / var(--total) * 100%);
+            --decay-start  : calc(var(--hold-start));
+
+            --env: linear(0 0%,
+              0 var(--delay-start),
+              1 var(--attack-start),
+              1 var(--hold-start),
+              1 var(--decay-start),
+              0);
+
+            result: 
+              calc(var(--total) * 1s) 
+              var(--env) 
+              var(--animation)
+              calc(var(--offset, 0) * 1s)
+              infinite 
+            ;
+          }
+
+          :scope {
+            container: inline size;
+          }
+
+          @scope {
+            div {
+              --freq: 3;
+              --vol: 10cqh;
+
+              width: 100%;
+              height: 5px;
+              background: red;
+              transform: translateY(calc(var(--env-t) * --osc-sin(var(--t)) * var(--vol)));
+              animation: 
+                calc(1s / var(--freq)) t linear calc(var(--offset)*1s) infinite,
+                --env-dahd(0.5, 0.2, 2, 0, env-t);
+              ;
+            }
+          }
+
+          @property --offset {
+            syntax: '<number>';
+            inherits: true;
+            initial-value: 0;
+          }
+
+          @keyframes t { 0% { --t: -1; } 100% { --t: 1; } }
+          @property --t {
+            syntax: '<number>';
+            inherits: true;
+            initial-value: 0;
+          }
+
+          @keyframes env-t { from { --env-t:  0; } to { --env-t:  1; } }
+          @property --env-t {
+            syntax: '<number>';
+            inherits: true;
+            initial-value: 0;
+          }
+        </style>
+        <script>
+          const n = 100;
+          for(let i = 0; i < n; i++) {
+            const div = document.createElement('div');
+            div.style.setProperty('--offset', i / n);
+            document.querySelector('figure').appendChild(div);
+          }
+        </script>
+      </figure>
+    </article>
+  </body>
+</html>

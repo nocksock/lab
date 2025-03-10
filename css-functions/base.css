@@ -1,0 +1,26 @@
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+
+  h1 {
+    margin: 2rem;
+    margin-left: 4rem;
+  }
+
+  article {
+    display: flex;
+    height: 75vh;
+    background: hsl(0 0 100% / 2%);
+    margin: 4rem;
+  }
+
+  figure {
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+}
+

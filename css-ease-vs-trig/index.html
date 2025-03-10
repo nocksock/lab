@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ease-in-out vs sin(t*pi)</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --osc: 1s osc-sin ease-in-out infinite alternate;
+      }
+
+      body {
+        font-family: system-ui, sans-serif;
+
+        h1 {
+          margin: 2rem;
+          margin-left: 4rem;
+        }
+
+        article {
+          display: flex;
+          height: 75vh;
+          background: hsl(0 0 100% / 2%);
+          margin: 4rem;
+        }
+
+        figure {
+          display: grid;
+          place-items: center;
+          grid-auto-flow: column;
+          width: 100%;
+        }
+      }
+
+      @property --t {
+        syntax: '<number>';
+        inherits: true;
+        initial-value: 0;
+      }
+
+      @keyframes t {
+        0% {
+          --t: -1;
+        }
+        100% {
+          --t: 1;
+        }
+      }
+
+      @property --p {
+        syntax: '<number>';
+        inherits: true;
+        initial-value: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ease-in-out vs <code>sin(t*pi)</code></h1>
+    <article>
+      <figure>
+        <style>
+          @scope {
+            div {
+              --speed: 5s;
+              width: 100%;
+              height: 5px;
+              background: red;
+
+              &::before {
+                display: block;
+                text-align: center;
+                padding-top: 0.5em;
+              }
+
+              &.a {
+                &::before {
+                  content: 'ease-in-out';
+                }
+                animation: var(--speed) t ease-in-out infinite alternate;
+                transform: translateY(calc(var(--t) * 25svh));
+              }
+
+              &.b {
+                &::before {
+                  content: 'cos(t*pi)';
+                }
+                animation: calc(var(--speed) * 2) t linear infinite;
+                transform: translateY(calc(cos(var(--t) * pi) * 25svh));
+              }
+            }
+          }
+        </style>
+        <div class="a"></div>
+        <div class="b"></div>
+      </figure>
+    </article>
+  </body>
+</html>
