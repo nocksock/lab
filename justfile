@@ -17,15 +17,23 @@ edit $ROOT='':
     ROOT=$(just pick)
   fi
 
-  pid=$(kitten @ launch \
-      --type=tab \
-      --cwd=$(realpath $ROOT) \
-      --title=$ROOT \
-      --keep-focus \
-        web-dev-server --app-index $ROOT)
-  cd $ROOT
-  echo pid: $pid
+  pid=$(kitten @ launch         \
+      --type=tab                \
+      --cwd=$(realpath $ROOT)   \
+      --title=$ROOT             \
+      --keep-focus              \
+      web-dev-server            \
+          --watch               \
+          --node-resolve        \
+          --esbuild-target auto \
+          --app-index $ROOT)
 
+  cd $ROOT
+  echo "Waiting for server to start..."
+
+  # There's --open for wds, but that always buts the window in front. 
+  #   ... and I don't like that, so:
+  #
   # Grabbing host from output of last command
   # ...
   #     Local:    http://localhost:8000/
@@ -39,7 +47,7 @@ edit $ROOT='':
     suffix="index.html"
   fi
 
-  open "${host}${suffix}" --background
+  open "${host}${suffix}" --background -a "Google Chrome Canary"
   nvim ${suffix:-''}
 
 fork $FOLDER='':
